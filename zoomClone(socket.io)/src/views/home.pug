@@ -1,0 +1,32 @@
+doctype html
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        meta(http-equiv="X-UA-Compatible", content="IE=edge")
+        meta(name="viewport", content="width=device-width, initial-scale=1.0")
+        title Noom
+
+        link(rel="stylesheet", href="https://unpkg.com/mvp.css")
+    body 
+        header 
+            h1 Zoom
+        main 
+            div#welcome
+                form
+                    input(type="text" placeholder="Room Name", required)
+                    button Enter Room
+                h4 Open Rooms: 
+                ul
+            div#room
+                h3
+                form#name
+                    input(type="text" placeholder="choose your nickname", required)
+                    button Save
+                form#msg
+                    input(type="text" placeholder="Send Message", required)
+                    button Send
+                ul 
+
+        //- socket.io는 브라우저에서 기본적으로 가지고있는 websocket API보다 많은 기능을 내포하고 있어 추가적으로 프론트엔드 단에도 설치가 필요하다.
+        script(src="/socket.io/socket.io.js")  
+        script(src="/public/js/app.js") 

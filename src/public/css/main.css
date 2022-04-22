@@ -1,0 +1,42 @@
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+main{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#welcome{
+    width: 100%;
+}
+
+#welcome form{
+    margin: 0 auto;
+    width: 100%;
+}
+
+#myStream{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.btnBox{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+button{
+    width: 200px;
+}
+
+button#mute{
+    margin-right: 10px;
+}

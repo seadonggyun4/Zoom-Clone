@@ -4,18 +4,29 @@ html(lang="en")
         meta(charset="UTF-8")
         meta(http-equiv="X-UA-Compatible", content="IE=edge")
         meta(name="viewport", content="width=device-width, initial-scale=1.0")
-        title Noom
+        title ZoomFace
 
         link(rel="stylesheet", href="https://unpkg.com/mvp.css")
+        link(rel="stylesheet", href="/public/css/main.css")
     body 
         header 
-            h1 Zoom
-        main 
-            form#nick
-                input(type="text", placeholder="choose a nickname", required)
-                button save
-            form#message
-                input(type="text", placeholder="write a message", required)
-                button Send
-            ul 
+            h1 ZoomFace
+        main
+            div#welcome
+                form
+                    input(type="text", placeholder="Room Name", required)
+                    button Enter room  
+            div#call
+                div#myStream
+                    //- playsinline은 video태그가 재생시 전체화면이 되는 것을 막는다.
+                    video#myFace(autoplay, playsinline, width="700", height="700")   
+                    div.btnBox 
+                        button#mute Mute 
+                        button#camera Turn Camera Off
+                    select#cameras 
+                        option(value="device") Face Camera
+                    video#peerFace(autoplay, playsinline, width="700", height="700")
+
+        //- socket.io는 브라우저에서 기본적으로 가지고있는 websocket API보다 많은 기능을 내포하고 있어 추가적으로 프론트엔드 단에도 설치가 필요하다.
+        script(src="/socket.io/socket.io.js")  
         script(src="/public/js/app.js") 
