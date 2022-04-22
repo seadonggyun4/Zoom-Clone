@@ -27,8 +27,20 @@ async function getCameras(){
     }
 }
 
+
+// ============================== [ 카메라 장비만 변경 함수 ] ==============================
 async function handleCameraChange(){
     await getMedia(camerasSelect.value) // camerasSelect의 각 기기 ID 값이 매개변수로 들어간다.
+    if(myPeerConnection){
+        const videoTrack = myStream.getVideoTracks()[0]// getmedia 함수실행후 최신의 값으로 초기화된 videoTrack의 값을 받는다.
+        // sender -> peer로 보내진 media stream track을 컨트롤 할 수 있게 한다.
+        // 나에게 연결된 장치중 video만 받아온다.
+        const videoSender = myPeerConnection
+        .getSenders()
+        .find((sender) => sender.track.kind === "video");
+        
+        videoSender.replaceTrack(videoTrack)// video인 stream track데이터를 새로 선택한 비디오로 바꾼다.
+    }
 }
 
 
@@ -139,7 +151,7 @@ async function initCall(){
     welcome.hidden = true
     call.hidden = false
     await getMedia() // 미디어 디바이스 실행함수
-    makeConnection()//
+    makeConnection()// webRTC연결 실행함수
 }
 
 // [ 방 이름 저장후 입장 함수 ]
@@ -190,8 +202,9 @@ backSocket.on('ice', ice => {
 
 
 
-// ================================= [ RTC 연결을  제어 ] =================================
+// ================================= [ webRTC 연결을  제어: ICE Candidate ] =================================
 let myPeerConnection
+const my = document.querySelector('#myStream')
 
 // [ RTC Code ]
 function makeConnection(){
@@ -204,15 +217,24 @@ function makeConnection(){
     myStream.getTracks().forEach( track => myPeerConnection.addTrack(track, myStream)) // 영상데이터, 음성데이터를 myPeerConnection에 넣는다.
 }
 
+
 // [ ice,roomName을 back 서버로 보낸다. ]
 function handleIce(data){
     // 생성된 icecandidate는, 시그널링 채널을 통해 연결된 다른 Peer들에게 전달되어야 한다. => 연결을 위함
     backSocket.emit('ice', data.candidate, roomName)
-    console.log('Got ice candidate and sent! 🥶')
+    console.log('Send ice candidate! 🥶')
 }
+
 
 // [연결된 peer로 부터 stream값을 받아 화면에 표현]
 function handleAddStream(data){
-    const peerFace = document.querySelector('#peerFace')
+    // const peerFace = document.querySelector('#peerFace')
+    // peerFace.srcObject = data.stream
+
+    const peerFace = document.createElement('video')
+    peerFace.setAttribute('autoplay', true)
+    peerFace.setAttribute('playsinline',true)
+    my.appendChild(peerFace)
     peerFace.srcObject = data.stream
+    
 }
