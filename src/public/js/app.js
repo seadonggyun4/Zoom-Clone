@@ -169,10 +169,19 @@ welcomeForm.addEventListener('submit', handleWelcomeSubmit)
 
 
 // ================================= [ Socket.io 시그널링 채널을 통한 연결  제어 ] =================================
+let myPeerConnection
+let myDataChannel
+
 // [ Socket.io Code ]
 
 /// === 주체자가  offer을 생성한뒤 서버(시그널링 채널)를 통해 백단에 넘긴다.
 backSocket.on('welcom', async () => {
+    myDataChannel = myPeerConnection.createDataChannel("chat");// 주체자가 DataChannel 생성
+    // 데이터 채널을 통해 받은 메시지를 콘솔에 출력
+    myDataChannel.addEventListener("message", (event) => 
+        console.log(event.data)
+    )
+    
     const offer = await myPeerConnection.createOffer() // 주체자가 offer을 생성한다. => offer은 다른 peer와 연결할수 있는 초대장과 마찬가지
     myPeerConnection.setLocalDescription(offer)// setLocalDescription(offer)로 Local 환경에서 연결구성 (합의과정을 제안할때)
     backSocket.emit('offer', offer, roomName)// offer을 전달하기 위해 offer,roomName을 백엔드로 넘긴다.
@@ -181,6 +190,14 @@ backSocket.on('welcom', async () => {
 
 // === 주체자가 넘긴 offer을 접속자가 서버(시그널링 채널)을 통해 받아온다.
 backSocket.on('offer', async (offer) => {
+    myPeerConnection.addEventListener("datachannel", (event) => {// 참여자가 DataChannel 받은다.
+        myDataChannel = event.channel;// 받은 DataChannel을 myDataChannel에 추가
+        // 데이터 채널을 통해 받은 메시지를 콘솔에 출력
+        myDataChannel.addEventListener("message", (event) =>
+          console.log(event.data)
+        );
+      });
+
     myPeerConnection.setRemoteDescription(offer)// 받아온 offer를 Description한다. => offer을 합의과정을 받을때
     const answer = await myPeerConnection.createAnswer()// 접속자peer가 대답을 만든다. => offer에 대한 대답?
     myPeerConnection.setLocalDescription(answer)// 주체자 peer에게 setLocalDescription(answer) 대답을 보낸다.(합의과정을 제안할때)
@@ -203,12 +220,25 @@ backSocket.on('ice', ice => {
 
 
 // ================================= [ webRTC 연결을  제어: ICE Candidate ] =================================
-let myPeerConnection
 const my = document.querySelector('#myStream')
 
 // [ RTC Code ]
 function makeConnection(){
-    myPeerConnection = new RTCPeerConnection()// RTC통신 시작 -> p2p 연결의 각 p가 만들어진다.
+    // RTC통신 시작 -> p2p 연결의 각 p가 만들어진다.
+    // 내부의 iceServers는 구글에서 무료로 제공하는 STUN서버 리스트 이다.
+    myPeerConnection = new RTCPeerConnection({
+        iceServers: [
+          {
+            urls: [
+              "stun:stun.l.google.com:19302",
+              "stun:stun1.l.google.com:19302",
+              "stun:stun2.l.google.com:19302",
+              "stun:stun3.l.google.com:19302",
+              "stun:stun4.l.google.com:19302",
+            ],
+          },
+        ],
+      });
     // icecandidate 이벤트 시작 =>  시그널링 채널을 통한 합의과정의 이루어진후 P2P 연결을 위해 실행되는 이벤트!!!
     myPeerConnection.addEventListener('icecandidate', handleIce)
     // addstream 이벤트 시작 => icecandidate 교환까지 끝나면 연결된 peer의 stream 값을 받아 화면에 표현하기 위함

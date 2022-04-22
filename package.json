@@ -4,7 +4,8 @@
   "description": "Zoom Clone using webRTC and websocket",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "sass": "sass -w src/scss/main.scss  src/public/css/main.css"
   },
   "keywords": [],
   "author": "",

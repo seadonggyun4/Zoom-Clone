@@ -1,0 +1,37 @@
+#myStream{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+
+
+    .btnBox{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 100px;
+
+        button{
+            width: 200px;
+            height: 40px;
+            color: #fff;
+            background-color: #ff6854;
+            border-radius: 5px;
+            transition: all .3s ease-in-out;
+            cursor: pointer;
+
+            &:hover{
+                box-shadow: 0px 0px 20px 5px #ff6854;
+            }
+        }
+
+        button#mute{
+            margin-right: 10px;
+        }
+
+    }
+}
+
+
+
