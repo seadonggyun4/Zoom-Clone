@@ -1,11 +1,98 @@
 const backSocket = io() // io(): 자동적으로 프론트엔드와 백엔드를 연결해 주는 socket.io 내장 함수
 
+// ============================== [ 비디오 데이터 화면에 송출 ] ==============================
+
+const myFace = document.querySelector('#myFace')// 비디오 태그
+
+let myStream // 유저 미디어 정보를 저장할 변수
+
+
+async function getMedia(deviceId){
+    const initialConstrains = { // 카메라 선택을 안했을때 => 휴대폰에서
+        audio: true,
+        video: { facingMode: "user" }// 셀프카메라 촬영모드 선택
+    }
+
+    const cameraConstraints = { // 카메라 선택을 했을때
+        audio: true, 
+        video: {deviceId: { exact: deviceId }} //deviceId값의 ID값인 카메라 선택
+    }
+
+    
+    try{
+        // navigator -> 브라우저 정보 객체
+        // navigator.mediaDevices.getUserMedia() -> 카메라와 마이크를 포함하는 MediaStream 객체를 얻어올 수 있다
+        myStream = await navigator.mediaDevices.getUserMedia(
+            deviceId?  cameraConstraints : initialConstrains //deviceID를 통해 어떤 카메라인지 구분
+        )
+        myFace.srcObject = myStream // 비디오 태그의 srcObject 속성에 mediaStream 객체를 넣는다.
+
+        if(!deviceId){//deviceId가 없을때 한번만 실행 
+            await getCameras()// 카메라 목록 가져오기
+        }
+    }
+    catch (error){
+        console.log(error)
+    }
+}
+
+// getMedia()
+
+// ============================== [ Mute, Camera 버튼 제어 ] ==============================
+
+const muteBtn = document.querySelector('#mute')//음소거 버튼
+const cameraBtn = document.querySelector('#camera')// 화면제어 버튼
+
+let muted = false
+let cameraOff = false
+
+
+// [ 소리 제어하기 ]
+function handleMuteClick(){
+    // myStream.getAudioTracks()의 enabled의 값을 cick이벤트로 제어한다.
+    myStream
+    .getAudioTracks()
+    .forEach((track) => (track.enabled = !track.enabled));// 소리가 음소거가 아니면 음소거로, 음소거일때는 소리가 나오게 된다.
+
+    // 버튼 텍스트 제어
+    if(!muted){// 음소거가 아닐때 
+        muteBtn.innerText = 'Unmute'
+        muted = true
+    } else {
+        muteBtn.innerText = 'Mute'
+        muted = false
+    }
+}
+
+// [ 카메라 제어하기 ]
+function handleCameraClick(){
+    myStream
+    .getVideoTracks()
+    .forEach((track) => (track.enabled = !track.enabled))// 화면이 On일때는 Off로, Off일때는 On으로 된다.
+
+    //버튼 텍스트 제어
+    if(cameraOff){//카메라가 꺼져있을때
+        cameraBtn.innerText = "Trun Camera Off"
+        cameraOff = false
+    } else {
+        cameraBtn.innerText = "Trun Camera On"
+        cameraOff = true
+    }
+}
+
+muteBtn.addEventListener('click', handleMuteClick)
+cameraBtn.addEventListener('click', handleCameraClick)
+
+
+
+
+
 // ============================== [ 연결된 장치중 카메라 장비만 추출 ] ==============================
 const camerasSelect = document.querySelector('#cameras')
 
 async function getCameras(){
     try{
-        const devices = await navigator.mediaDevices.enumerateDevices(); // 컴퓨터에 연결된 장치들을 받아온다.
+        const devices = await navigator.mediaDevices.enumerateDevices(); // navigator.mediaDevices.enumerateDevices() =>  컴퓨터에 연결된 장치들을 객체로 받아온다.
         const cameras = devices.filter(device => device.kind === "videoinput")// 컴퓨터에 연결된 카메라 장치들을 받아온다.
         
         const currentCamera =  myStream.getVideoTracks()[0]// 현재 연결된 비디오 장치들중 1번째 값을 넣는다.
@@ -51,87 +138,8 @@ camerasSelect.addEventListener('input', handleCameraChange)
 
 
 
-// ============================== [ 비디오 데이터 화면에 송출 ] ==============================
-
-const myFace = document.querySelector('#myFace')
-
-let myStream
 
 
-async function getMedia(deviceId){
-    const initialConstrains = { // 카메라 선택을 안했을때
-        audio: true,
-        video: { facingMode: "user" }// 셀프카메라 촬영모드 선택
-    }
-
-    const cameraConstraints = { // 카메라 선택을 했을때
-        audio: true, 
-        video: {deviceId: { exact: deviceId }} //deviceId값의 ID값인 카메라 선택
-    }
-
-    
-    
-    try{
-        // navigator -> 브라우저 정보 객체
-        // navigator.mediaDevices.getUserMedia() -> 카메라와 마이크를 포함하는 MediaStream 객체를 얻어올 수 있다
-        myStream = await navigator.mediaDevices.getUserMedia(
-            deviceId?  cameraConstraints : initialConstrains
-        )
-        myFace.srcObject = myStream // 비디오 태그의 srcObject 속성에 mediaStream 객체를 넣는다.
-
-        if(!deviceId){//deviceId가 없을때 한번만 실행 
-            await getCameras()// 카메라 목록 가져오기
-        }
-    }
-    catch (error){
-        console.log(error)
-    }
-}
-
-// getMedia()
-
-// ============================== [ Mute, Camera 버튼 제어 ] ==============================
-
-const muteBtn = document.querySelector('#mute')
-const cameraBtn = document.querySelector('#camera')
-
-let muted = false
-let cameraOff = false
-
-
-// [ 소리 제어하기 ]
-function handleMuteClick(){
-    // myStream.getAudioTracks()의 enabled의 값을 cick이벤트로 제어한다.
-    myStream
-    .getAudioTracks()
-    .forEach((track) => (track.enabled = !track.enabled));
-
-    if(!muted){// 음소거가 아닐때
-        muteBtn.innerText = 'Unmute'
-        muted = true
-    } else {
-        muteBtn.innerText = 'Mute'
-        muted = false
-    }
-}
-
-// [ 카메라 제어하기 ]
-function handleCameraClick(){
-    myStream
-    .getVideoTracks()
-    .forEach((track) => (track.enabled = !track.enabled))
-
-    if(cameraOff){//카메라가 꺼져있을때
-        cameraBtn.innerText = "Trun Camera Off"
-        cameraOff = false
-    } else {
-        cameraBtn.innerText = "Trun Camera On"
-        cameraOff = true
-    }
-}
-
-muteBtn.addEventListener('click', handleMuteClick)
-cameraBtn.addEventListener('click', handleCameraClick)
 
 
 // ============================== [ room 과 mediadivece의 전체 태그 제어 ] ==============================
@@ -170,17 +178,17 @@ welcomeForm.addEventListener('submit', handleWelcomeSubmit)
 
 // ================================= [ Socket.io 시그널링 채널을 통한 연결  제어 ] =================================
 let myPeerConnection
-let myDataChannel
+// let myDataChannel
 
 // [ Socket.io Code ]
 
 /// === 주체자가  offer을 생성한뒤 서버(시그널링 채널)를 통해 백단에 넘긴다.
 backSocket.on('welcom', async () => {
-    myDataChannel = myPeerConnection.createDataChannel("chat");// 주체자가 DataChannel 생성
-    // 데이터 채널을 통해 받은 메시지를 콘솔에 출력
-    myDataChannel.addEventListener("message", (event) => 
-        console.log(event.data)
-    )
+    // myDataChannel = myPeerConnection.createDataChannel("chat");// 주체자가 DataChannel 생성
+    // // 데이터 채널을 통해 받은 메시지를 콘솔에 출력
+    // myDataChannel.addEventListener("message", (event) => 
+    //     console.log(event.data)
+    // )
     
     const offer = await myPeerConnection.createOffer() // 주체자가 offer을 생성한다. => offer은 다른 peer와 연결할수 있는 초대장과 마찬가지
     myPeerConnection.setLocalDescription(offer)// setLocalDescription(offer)로 Local 환경에서 연결구성 (합의과정을 제안할때)
@@ -190,13 +198,13 @@ backSocket.on('welcom', async () => {
 
 // === 주체자가 넘긴 offer을 접속자가 서버(시그널링 채널)을 통해 받아온다.
 backSocket.on('offer', async (offer) => {
-    myPeerConnection.addEventListener("datachannel", (event) => {// 참여자가 DataChannel 받은다.
-        myDataChannel = event.channel;// 받은 DataChannel을 myDataChannel에 추가
-        // 데이터 채널을 통해 받은 메시지를 콘솔에 출력
-        myDataChannel.addEventListener("message", (event) =>
-          console.log(event.data)
-        );
-      });
+    // myPeerConnection.addEventListener("datachannel", (event) => {// 참여자가 DataChannel 받은다.
+    //     myDataChannel = event.channel;// 받은 DataChannel을 myDataChannel에 추가
+    //     // 데이터 채널을 통해 받은 메시지를 콘솔에 출력
+    //     myDataChannel.addEventListener("message", (event) =>
+    //       console.log(event.data)
+    //     );
+    //   });
 
     myPeerConnection.setRemoteDescription(offer)// 받아온 offer를 Description한다. => offer을 합의과정을 받을때
     const answer = await myPeerConnection.createAnswer()// 접속자peer가 대답을 만든다. => offer에 대한 대답?
@@ -239,7 +247,7 @@ function makeConnection(){
           },
         ],
       });
-    // icecandidate 이벤트 시작 =>  시그널링 채널을 통한 합의과정의 이루어진후 P2P 연결을 위해 실행되는 이벤트!!!
+    // icecandidate 이벤트 시작 =>  시그널링 채널을 통한 합의과정이 이루어진후 P2P 연결을 위해 실행되는 이벤트!!!
     myPeerConnection.addEventListener('icecandidate', handleIce)
     // addstream 이벤트 시작 => icecandidate 교환까지 끝나면 연결된 peer의 stream 값을 받아 화면에 표현하기 위함
     myPeerConnection.addEventListener('addstream', handleAddStream)
